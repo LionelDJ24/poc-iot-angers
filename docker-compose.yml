@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+
+  node-red:
+    image: nodered/node-red:latest
+    ports:
+      - "1880:1880"
+    depends_on:
+      - mosquitto
+
+  influxdb:
+    image: influxdb:2.7
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=angers2025
+      - DOCKER_INFLUXDB_INIT_ORG=angers-metropole
+      - DOCKER_INFLUXDB_INIT_BUCKET=iot-capteurs
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - influxdb
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    ports:
+      - "8080:8080"
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=angers2025
+    command: start-dev
