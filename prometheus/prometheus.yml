@@ -2,10 +2,12 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
+  # Node-RED peut exposer des métriques si vous installez le plugin 
+  # node-red-contrib-prometheus-exporter
   - job_name: 'node-red'
     static_configs:
       - targets: ['node-red:1880']
 
-  - job_name: 'mosquitto'
-    static_configs:
-      - targets: ['mosquitto:9001']
+  # Note : La section Mosquitto a été retirée car Mosquitto n'est pas 
+  # un serveur HTTP. Pour avoir des métriques Mosquitto dans Prometheus, 
+  # il faudrait ajouter un conteneur "mqtt-exporter".
