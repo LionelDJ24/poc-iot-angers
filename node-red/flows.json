@@ -1,0 +1,255 @@
+[
+    {
+        "id": "f6f2187d.f17ca8",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "f8f6410a3580c2b1",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "mosquitto",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "6d640ce164fb732e",
+        "type": "influxdb",
+        "hostname": "127.0.0.1",
+        "port": 8086,
+        "protocol": "http",
+        "database": "database",
+        "name": "",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": "http://influxdb:8086",
+        "timeout": 10,
+        "rejectUnauthorized": true
+    },
+    {
+        "id": "3cc11d24.ff01a2",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "WARNING: please check you have started this container with a volume that is mounted to /data\\n otherwise any flow changes are lost when you redeploy or upgrade the container\\n (e.g. upgrade to a more recent node-red docker image).\\n  If you are using named volumes you can ignore this warning.\\n Double click or see info side panel to learn how to start Node-RED in Docker to save your work",
+        "info": "\nTo start docker with a bind mount volume (-v option), for example:\n\n```\ndocker run -it -p 1880:1880 -v /home/user/node_red_data:/data --name mynodered nodered/node-red\n```\n\nwhere `/home/user/node_red_data` is a directory on your host machine where you want to store your flows.\n\nIf you do not do this then you can experiment and redploy flows, but if you restart or upgrade the container the flows will be disconnected and lost. \n\nThey will still exist in a hidden data volume, which can be recovered using standard docker techniques, but that is much more complex than just starting with a named volume as described above.",
+        "x": 350,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "493dd94667590ca2",
+        "type": "mqtt in",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "topic": "angers/#",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "f8f6410a3580c2b1",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 140,
+        "y": 200,
+        "wires": [
+            [
+                "11335a206034b60b"
+            ]
+        ]
+    },
+    {
+        "id": "11335a206034b60b",
+        "type": "json",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 370,
+        "y": 200,
+        "wires": [
+            [
+                "94863b2057fd8f54",
+                "10971c11395a2de1"
+            ]
+        ]
+    },
+    {
+        "id": "94863b2057fd8f54",
+        "type": "influxdb out",
+        "z": "f6f2187d.f17ca8",
+        "influxdb": "6d640ce164fb732e",
+        "name": "",
+        "measurement": "msg.payload.capteur_id",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "s",
+        "retentionPolicyV18Flux": "",
+        "org": "angers-metropole",
+        "bucket": "iot-capteurs",
+        "x": 710,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "10971c11395a2de1",
+        "type": "switch",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "property": "payload.alerte",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "true",
+                "vt": "jsonata"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 580,
+        "y": 320,
+        "wires": [
+            [
+                "ffbeb154416dffa9"
+            ]
+        ]
+    },
+    {
+        "id": "ffbeb154416dffa9",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 800,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "a68b5ddb84dbb3ec",
+        "type": "inject",
+        "z": "f6f2187d.f17ca8",
+        "name": "Lancer Simulation Panne",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 170,
+        "y": 420,
+        "wires": [
+            [
+                "d2790178ff781b7c"
+            ]
+        ]
+    },
+    {
+        "id": "d2790178ff781b7c",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Générateur 10 points (T-50 min)",
+        "func": "// On crée un tableau pour stocker nos 10 messages\nvar messages = [];\n// On récupère l'heure actuelle en millisecondes\nvar maintenant = Date.now();\n\n// Boucle pour générer 10 messages espacés de 5 minutes (300 000 ms)\nfor (var i = 10; i >= 1; i--) {\n    messages.push({\n        payload: {\n            capteur_id: \"air_01\",\n            valeur: Math.round(Math.random() * 100 + 100), // Valeur aléatoire entre 100 et 200\n            unite: \"ug/m3\",\n            // Calcul du timestamp passé (en secondes pour InfluxDB)\n            timestamp: (maintenant - i * 300000) / 1000 \n        }\n    });\n}\n\n// On retourne le tableau de messages\n// Node-RED enverra chaque message du tableau l'un après l'autre\nreturn [messages];",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 420,
+        "wires": [
+            [
+                "29d7edc85e6ac546",
+                "fd3503e4ce237bf7"
+            ]
+        ]
+    },
+    {
+        "id": "29d7edc85e6ac546",
+        "type": "influxdb out",
+        "z": "f6f2187d.f17ca8",
+        "influxdb": "6d640ce164fb732e",
+        "name": "",
+        "measurement": "mesures_brutes",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "angers-metropole",
+        "bucket": "iot-capteurs",
+        "x": 840,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "fd3503e4ce237bf7",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 740,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "89bd4f49dce459c3",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-influxdb": "0.7.0"
+        }
+    }
+]
