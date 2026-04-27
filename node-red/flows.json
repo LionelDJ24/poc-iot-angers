@@ -38,7 +38,30 @@
         "sessionExpiry": ""
     },
     {
+        "id": "89bd4f49dce459c3",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-influxdb": "0.7.0"
+        }
+    },
+    {
         "id": "6d640ce164fb732e",
+        "type": "influxdb",
+        "hostname": "127.0.0.1",
+        "port": 8086,
+        "protocol": "http",
+        "database": "database",
+        "name": "",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": "http://influxdb:8086",
+        "timeout": 10,
+        "rejectUnauthorized": true
+    },
+    {
+        "id": "55f7706f10a6d3ef",
         "type": "influxdb",
         "hostname": "127.0.0.1",
         "port": 8086,
@@ -79,44 +102,9 @@
         "y": 200,
         "wires": [
             [
-                "11335a206034b60b"
+                "7ebdccd417e4c86a"
             ]
         ]
-    },
-    {
-        "id": "11335a206034b60b",
-        "type": "json",
-        "z": "f6f2187d.f17ca8",
-        "name": "",
-        "property": "payload",
-        "action": "",
-        "pretty": false,
-        "x": 370,
-        "y": 200,
-        "wires": [
-            [
-                "94863b2057fd8f54",
-                "10971c11395a2de1"
-            ]
-        ]
-    },
-    {
-        "id": "94863b2057fd8f54",
-        "type": "influxdb out",
-        "z": "f6f2187d.f17ca8",
-        "influxdb": "6d640ce164fb732e",
-        "name": "",
-        "measurement": "msg.payload.capteur_id",
-        "precision": "",
-        "retentionPolicy": "",
-        "database": "database",
-        "precisionV18FluxV20": "s",
-        "retentionPolicyV18Flux": "",
-        "org": "angers-metropole",
-        "bucket": "iot-capteurs",
-        "x": 710,
-        "y": 200,
-        "wires": []
     },
     {
         "id": "10971c11395a2de1",
@@ -148,7 +136,7 @@
         "type": "debug",
         "z": "f6f2187d.f17ca8",
         "name": "debug 1",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -205,28 +193,9 @@
         "y": 420,
         "wires": [
             [
-                "29d7edc85e6ac546",
                 "fd3503e4ce237bf7"
             ]
         ]
-    },
-    {
-        "id": "29d7edc85e6ac546",
-        "type": "influxdb out",
-        "z": "f6f2187d.f17ca8",
-        "influxdb": "6d640ce164fb732e",
-        "name": "",
-        "measurement": "mesures_brutes",
-        "precision": "",
-        "retentionPolicy": "",
-        "database": "database",
-        "precisionV18FluxV20": "ms",
-        "retentionPolicyV18Flux": "",
-        "org": "angers-metropole",
-        "bucket": "iot-capteurs",
-        "x": 840,
-        "y": 400,
-        "wires": []
     },
     {
         "id": "fd3503e4ce237bf7",
@@ -237,7 +206,8 @@
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "false",
+        "complete": "payload",
+        "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
         "x": 740,
@@ -245,11 +215,70 @@
         "wires": []
     },
     {
-        "id": "89bd4f49dce459c3",
-        "type": "global-config",
-        "env": [],
-        "modules": {
-            "node-red-contrib-influxdb": "0.7.0"
-        }
+        "id": "7ebdccd417e4c86a",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "function 1",
+        "func": "var payload = msg.payload;\nvar alerte = payload.alerte ? 1 : 0;\n\nmsg.payload = \"mesures_brutes,capteur_id=\" + payload.capteur_id + \" value=\" + parseFloat(payload.valeur) + \",alerte=\" + alerte + \" \" + Date.now();\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 200,
+        "wires": [
+            [
+                "10971c11395a2de1",
+                "55de7812cf24badb",
+                "eaf8992a29b59cbb"
+            ]
+        ]
+    },
+    {
+        "id": "55de7812cf24badb",
+        "type": "debug",
+        "z": "f6f2187d.f17ca8",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 740,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "eaf8992a29b59cbb",
+        "type": "http request",
+        "z": "f6f2187d.f17ca8",
+        "name": "",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "http://influxdb:8086/api/v2/write?org=angers-metropole&bucket=iot-capteurs&precision=ms&token=jw8AJBwD6j9uFOtsdNohcPNjjAZHlKz4PvNAXHxFDzXV_dUUg8htrtAfN1ZztqXvz1Sj0c-TStMJ4VHkEoiPCw==",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "other",
+                "keyValue": "Authorization",
+                "valueType": "other",
+                "valueValue": "Token jw8AJBwD6j9uFOtsdNohcPNjjAZHlKz4PvNAXHxFDzXV_dUUg8htrtAfN1ZztqXvz1Sj0c-TStMJ4VHkEoiPCw=="
+            }
+        ],
+        "x": 710,
+        "y": 240,
+        "wires": [
+            []
+        ]
     }
 ]
