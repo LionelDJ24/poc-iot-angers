@@ -123,8 +123,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 1,
-        "x": 580,
-        "y": 320,
+        "x": 720,
+        "y": 240,
         "wires": [
             [
                 "ffbeb154416dffa9"
@@ -144,8 +144,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 800,
-        "y": 320,
+        "x": 900,
+        "y": 220,
         "wires": []
     },
     {
@@ -182,7 +182,7 @@
         "type": "function",
         "z": "f6f2187d.f17ca8",
         "name": "Générateur 10 points (T-50 min)",
-        "func": "// On crée un tableau pour stocker nos 10 messages\nvar messages = [];\n// On récupère l'heure actuelle en millisecondes\nvar maintenant = Date.now();\n\n// Boucle pour générer 10 messages espacés de 5 minutes (300 000 ms)\nfor (var i = 10; i >= 1; i--) {\n    messages.push({\n        payload: {\n            capteur_id: \"air_01\",\n            valeur: Math.round(Math.random() * 100 + 100), // Valeur aléatoire entre 100 et 200\n            unite: \"ug/m3\",\n            // Calcul du timestamp passé (en secondes pour InfluxDB)\n            timestamp: (maintenant - i * 300000) / 1000 \n        }\n    });\n}\n\n// On retourne le tableau de messages\n// Node-RED enverra chaque message du tableau l'un après l'autre\nreturn [messages];",
+        "func": "var messages = [];\nvar maintenant = Date.now();\n\nfor (var i = 10; i >= 1; i--) {\n    var valeur = Math.round(Math.random() * 100 + 100);\n    var timestamp = maintenant - i * 300000;\n    \n    messages.push({\n        payload: \"mesures_brutes,capteur_id=air_01 value=\" + valeur + \",alerte=0 \" + timestamp\n    });\n}\n\nreturn [messages];",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -193,7 +193,8 @@
         "y": 420,
         "wires": [
             [
-                "fd3503e4ce237bf7"
+                "fd3503e4ce237bf7",
+                "eaf8992a29b59cbb"
             ]
         ]
     },
@@ -275,8 +276,8 @@
                 "valueValue": "Token jw8AJBwD6j9uFOtsdNohcPNjjAZHlKz4PvNAXHxFDzXV_dUUg8htrtAfN1ZztqXvz1Sj0c-TStMJ4VHkEoiPCw=="
             }
         ],
-        "x": 710,
-        "y": 240,
+        "x": 830,
+        "y": 340,
         "wires": [
             []
         ]

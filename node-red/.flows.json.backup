@@ -219,7 +219,7 @@
         "type": "function",
         "z": "f6f2187d.f17ca8",
         "name": "function 1",
-        "func": "var payload = msg.payload;\n\nmsg.payload = \"mesures_brutes,capteur_id=\" + payload.capteur_id + \" value=\" + parseFloat(payload.valeur) + \" \" + Date.now();\n\nreturn msg;",
+        "func": "var payload = msg.payload;\nvar alerte = payload.alerte ? 1 : 0;\n\nmsg.payload = \"mesures_brutes,capteur_id=\" + payload.capteur_id + \" value=\" + parseFloat(payload.valeur) + \",alerte=\" + alerte + \" \" + Date.now();\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -248,7 +248,7 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 580,
+        "x": 740,
         "y": 160,
         "wires": []
     },
@@ -275,8 +275,8 @@
                 "valueValue": "Token jw8AJBwD6j9uFOtsdNohcPNjjAZHlKz4PvNAXHxFDzXV_dUUg8htrtAfN1ZztqXvz1Sj0c-TStMJ4VHkEoiPCw=="
             }
         ],
-        "x": 630,
-        "y": 220,
+        "x": 710,
+        "y": 240,
         "wires": [
             []
         ]
