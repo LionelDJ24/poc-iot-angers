@@ -1,178 +1,141 @@
-\# POC IoT — Territoire Intelligent Angers
+# POC IoT — Territoire Intelligent Angers
 
+Preuve de concept d'un système IoT urbain pour Angers Métropole. Simulation de capteurs urbains (qualité de l'air, trafic, déchets) avec collecte MQTT, détection d'alertes, visualisation temps réel et authentification MFA.
 
+---
 
-\## Contexte du projet
+## Prérequis
 
-Preuve de concept d'un système IoT urbain pour Angers Métropole, réalisé dans le cadre d'un projet académique à l'ESAIP. L'objectif est de simuler la collecte, le traitement, le stockage et la visualisation de données de capteurs urbains (qualité de l'air, trafic, déchets).
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [Python 3.x](https://www.python.org/downloads/)
+- [Git](https://git-scm.com/)
 
+---
 
+## Installation et démarrage
 
-\## Stack technique
+### 1. Cloner le projet
 
-Tout tourne en local via \*\*Docker Compose\*\* :
-
-\- \*\*Mosquitto\*\* (broker MQTT) — port 1883 / 9001
-
-\- \*\*Node-RED\*\* (moteur de règles) — port 1880
-
-\- \*\*InfluxDB 2.7\*\* (base de données séries temporelles) — port 8086
-
-\- \*\*Prometheus\*\* (métriques système) — port 9090
-
-\- \*\*Grafana\*\* (dashboards) — port 3000
-
-\- \*\*Keycloak 23.0\*\* (authentification MFA) — port 8080
-
-\- \*\*Script Python\*\* (`simulateur/capteur.py`) avec `paho-mqtt` — joue le rôle des capteurs physiques
-
-
-
-\## Capteurs simulés
-
-Définis dans `simulateur/capteur.py` :
-
-| ID | Topic MQTT | Plage | Unité | Seuil alerte |
-
-|----|-----------|-------|-------|--------------|
-
-| `air\_01` | `angers/air/capteur\_01/data` | 80–260 | µg/m³ | 200 |
-
-| `trafic\_01` | `angers/trafic/capteur\_01/data` | 0–120 | vh/min | 100 |
-
-| `dechet\_01` | `angers/dechet/capteur\_01/data` | 0–100 | % | 80 |
-
-
-
-Format JSON publié : `{"capteur\_id", "valeur", "unite", "seuil", "alerte" (bool), "timestamp"}`
-
-
-
-\## InfluxDB
-
-\- Organisation : `angers-metropole`
-
-\- Bucket : `iot-capteurs`
-
-\- Measurement : `mesures\_brutes`
-
-\- Identifiants : `admin` / `angers2025`
-
-\- Les champs stockés : `capteur\_id`, `valeur`, `unite`, `seuil`, `alerte`, `timestamp`
-
-
-
-\## Requête Flux (Grafana) qui fonctionne — base de référence
-
-```flux
-
-from(bucket: "iot-capteurs")
-
-&#x20; |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
-
-&#x20; |> filter(fn: (r) => r\["\_measurement"] == "mesures\_brutes")
-
-&#x20; |> pivot(rowKey:\["\_time"], columnKey: \["\_field"], valueColumn: "\_value")
-
-&#x20; |> filter(fn: (r) => r\["capteur\_id"] == "air\_01")
-
-&#x20; |> keep(columns: \["\_time", "valeur"])
-
+```bash
+git clone https://github.com/LionelDJ24/poc-iot-angers.git
+cd poc-iot-angers
 ```
 
-Remplacer `air\_01` par `trafic\_01` ou `dechet\_01` pour les autres capteurs.
+### 2. Lancer les conteneurs
 
+```bash
+docker-compose up -d
+```
 
+Attendre 30 secondes que tous les services démarrent.
 
-\## Node-RED — Flux configurés
+### 3. Installer les dépendances Python
 
-\- \*\*Flux 1\*\* : collecte nominale → `mqtt in (angers/#)` → `json` → `debug` → `influxdb out`
+```bash
+pip install paho-mqtt
+```
 
-\- \*\*Flux 2\*\* : détection d'alerte → `switch (msg.payload.alerte == true)` → `change` → `debug`
+### 4. Lancer le simulateur de capteurs
 
-\- \*\*Flux 3\*\* : Store and Forward simulé → `inject` → `function (10 messages passés)` → `influxdb out`
+```bash
+python simulateur/capteur.py
+```
 
+---
 
+## Interfaces disponibles
 
-Important : dans Node-RED, le serveur MQTT s'appelle `mosquitto` (pas `localhost`) car les conteneurs Docker communiquent par nom de service.
-
-
-
-\## Keycloak
-
-\- Realm : `angers-iot`
-
-\- Rôles : `administrateur`, `operateur`, `lecteur`
-
-\- MFA TOTP activé
-
-\- Identifiants admin : `admin` / `angers2025`
-
-
-
-\## Identifiants de toutes les interfaces
-
-| Service | URL | Login |
-
-|---------|-----|-------|
-
+| Service | URL | Identifiants |
+|---------|-----|--------------|
 | Node-RED | http://localhost:1880 | — |
-
 | InfluxDB | http://localhost:8086 | admin / angers2025 |
-
 | Grafana | http://localhost:3000 | admin / admin |
-
 | Keycloak | http://localhost:8080 | admin / angers2025 |
-
 | Prometheus | http://localhost:9090 | — |
 
+---
 
+## Configuration sur un nouveau PC
 
-\## État d'avancement
+### InfluxDB — Générer un token
 
-\- \[x] Structure du projet créée
+1. Ouvrir http://localhost:8086
+2. **Load Data** → **API Tokens** → **Generate API Token** → **All Access**
+3. Copier le token
 
-\- \[x] docker-compose.yml écrit et fonctionnel
+### Node-RED — Configurer le token InfluxDB
 
-\- \[x] mosquitto.conf configuré
+1. Ouvrir http://localhost:1880
+2. Double-cliquer sur le nœud **requête http**
+3. Dans **En-têtes**, mettre :
+   - Clé : `Authorization`
+   - Valeur : `Token VOTRE_TOKEN`
+4. **Terminer** → **Déployer**
 
-\- \[x] prometheus.yml configuré
+### Grafana — Configurer la source de données
 
-\- \[x] simulateur/capteur.py fonctionnel, paho-mqtt installé
+1. Ouvrir http://localhost:3000
+2. **Connections** → **Data sources** → **Add data source** → **InfluxDB**
+3. Configurer :
+   - Query language : **Flux**
+   - URL : `http://influxdb:8086`
+   - Organization : `angers-metropole`
+   - Token : coller le token InfluxDB
+   - Default Bucket : `iot-capteurs`
+4. **Save & test**
 
-\- \[x] Docker Compose up — tous les services démarrés
+### Grafana — Importer le dashboard
 
-\- \[x] Node-RED : flux 1 (collecte) et flux 2 (alertes) configurés
+1. **Dashboards** → **New** → **Import**
+2. Coller le contenu de `grafana/dashboard.json`
+3. **Load** → **Import**
 
-\- \[x] InfluxDB : bucket et token créés
+### Keycloak — Importer le realm
 
-\- \[x] Grafana : dashboard qualité de l'air fonctionnel (requête Flux validée)
+1. Ouvrir http://localhost:8080 → **Administration Console**
+2. Cliquer sur **master** → **Create Realm**
+3. Activer **Browse** → sélectionner `keycloak/realm-export.json`
+4. **Create**
 
-\- \[ ] Grafana : panneaux trafic et déchets à finaliser
+---
 
-\- \[ ] Flux 3 Node-RED (Store and Forward) à tester
+## Capteurs simulés
 
-\- \[ ] Keycloak : realm, rôles et utilisateurs à créer
+| Capteur | Topic MQTT | Plage | Unité | Seuil alerte |
+|---------|-----------|-------|-------|--------------|
+| air_01 | angers/air/capteur_01/data | 80–260 | µg/m³ | 200 |
+| trafic_01 | angers/trafic/capteur_01/data | 0–120 | vh/min | 100 |
+| dechet_01 | angers/dechet/capteur_01/data | 0–100 | % | 80 |
 
-\- \[ ] Volumes de persistance à ajouter dans docker-compose.yml (données non encore persistées !)
+---
 
-\- \[ ] Export flows.json Node-RED à committer sur GitHub
+## Scénarios démontrés
 
+| Séquence | Description | Où le voir |
+|----------|-------------|------------|
+| 1 | Collecte nominale | Grafana — courbes en temps réel |
+| 2 | Détection d'alertes | Grafana — panneau Alertes Actives |
+| 3 | Authentification MFA | Keycloak — connexion alice/bob/charlie |
+| 6 | Store and Forward | Node-RED — bouton "Lancer Simulation Panne" |
 
+---
 
-\## Problème persistance — IMPORTANT
+## Utilisateurs Keycloak
 
-Les configurations Grafana, Keycloak et InfluxDB ne sont PAS encore sauvegardées sur disque. Si `docker-compose down` est exécuté, tout est perdu. Ajouter les volumes manquants dans docker-compose.yml avant de continuer.
+| Utilisateur | Rôle | Password |
+|-------------|------|---------|
+| alice | administrateur | angers2025 |
+| bob | operateur | angers2025 |
+| charlie | lecteur | angers2025 |
 
+---
 
+## Stack technique
 
-\## Diagrammes de séquence couverts
-
-6 scénarios : collecte nominale, détection d'anomalie, authentification utilisateur, provisionnement capteur (OTAA), mise à jour firmware OTA, panne réseau et mode dégradé.
-
-
-
-\## Objectif final
-
-Produire un rapport avec captures d'écran réelles (Grafana, Node-RED, Keycloak) pour valider les choix techniques de l'architecture IoT.
-
+- **Mosquitto** — Broker MQTT
+- **Node-RED** — Moteur de règles et traitement
+- **InfluxDB 2.7** — Base de données séries temporelles
+- **Grafana** — Visualisation et dashboards
+- **Prometheus** — Supervision des métriques
+- **Keycloak 23.0** — Authentification et MFA
+- **Python / paho-mqtt** — Simulation des capteurs
